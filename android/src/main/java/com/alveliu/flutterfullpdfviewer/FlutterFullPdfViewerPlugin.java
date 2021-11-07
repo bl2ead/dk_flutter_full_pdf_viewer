@@ -9,34 +9,64 @@ import android.widget.FrameLayout;
 
 import java.util.Map;
 
+import androidx.annotation.NonNull;
+import io.flutter.embedding.engine.plugins.FlutterPlugin;
+import io.flutter.embedding.engine.plugins.activity.ActivityAware;
+import io.flutter.embedding.engine.plugins.activity.ActivityPluginBinding;
 import io.flutter.plugin.common.MethodCall;
 import io.flutter.plugin.common.MethodChannel;
 import io.flutter.plugin.common.MethodChannel.MethodCallHandler;
 import io.flutter.plugin.common.MethodChannel.Result;
 import io.flutter.plugin.common.PluginRegistry;
-import io.flutter.plugin.common.PluginRegistry.Registrar;
 
 /**
  * FlutterFullPdfViewerPlugin
  */
-public class FlutterFullPdfViewerPlugin implements MethodCallHandler, PluginRegistry.ActivityResultListener {
+public class FlutterFullPdfViewerPlugin implements FlutterPlugin, MethodCallHandler, ActivityAware {
     static MethodChannel channel;
     private Activity activity;
     private FlutterFullPdfViewerManager flutterFullPdfViewerManager;
 
-    private FlutterFullPdfViewerPlugin (Activity activity) {
-        this.activity = activity;
+    public FlutterFullPdfViewerPlugin () {}
+
+    // /**
+    //  * Plugin registration.
+    //  */
+    // public static void registerWith(Registrar registrar) {
+    //     channel = new MethodChannel(registrar.messenger(), "flutter_full_pdf_viewer");
+    //     final FlutterFullPdfViewerPlugin instance = new FlutterFullPdfViewerPlugin(registrar.activity());
+    //     registrar.addActivityResultListener(instance);
+    //     channel.setMethodCallHandler(instance);
+    // }
+
+    @Override
+    public void onAttachedToEngine(@NonNull FlutterPluginBinding binding) {
+        channel = new MethodChannel(binding.getFlutterEngine().getDartExecutor(), "flutter_full_pdf_viewer");
+        channel.setMethodCallHandler(this);
     }
 
-    /**
-     * Plugin registration.
-     */
-    public static void registerWith(Registrar registrar) {
-        channel = new MethodChannel(registrar.messenger(), "flutter_full_pdf_viewer");
-        final FlutterFullPdfViewerPlugin instance = new FlutterFullPdfViewerPlugin(registrar.activity());
-        registrar.addActivityResultListener(instance);
-        channel.setMethodCallHandler(instance);
+    @Override
+    public void onAttachedToActivity(ActivityPluginBinding activityPluginBinding) {
+        this.activity = activityPluginBinding.getActivity();
     }
+
+    @Override
+    public void onReattachedToActivityForConfigChanges(ActivityPluginBinding activityPluginBinding) {
+        this.onAttachedToActivity(activityPluginBinding);
+    }
+
+    @Override
+    public void onDetachedFromActivity() {
+        this.activity = null;
+    }
+
+    @Override
+    public void onDetachedFromActivityForConfigChanges() {
+        this.onDetachedFromActivity();
+    }
+
+    @Override
+    public void onDetachedFromEngine(@NonNull FlutterPluginBinding binding) {}
 
     @Override
     public void onMethodCall(MethodCall call, Result result) {
@@ -59,10 +89,10 @@ public class FlutterFullPdfViewerPlugin implements MethodCallHandler, PluginRegi
     private void openPDF(MethodCall call, MethodChannel.Result result) {
         String path = call.argument("path");
         if (flutterFullPdfViewerManager == null || flutterFullPdfViewerManager.closed) {
-            flutterFullPdfViewerManager = new FlutterFullPdfViewerManager(activity);
+            flutterFullPdfViewerManager = new FlutterFullPdfViewerManager(this.activity);
         }
         FrameLayout.LayoutParams params = buildLayoutParams(call);
-        activity.addContentView(flutterFullPdfViewerManager.pdfView, params);
+        this.activity.addContentView(flutterFullPdfViewerManager.pdfView, params);
         flutterFullPdfViewerManager.openPDF(path);
         result.success(null);
     }
@@ -102,10 +132,5 @@ public class FlutterFullPdfViewerPlugin implements MethodCallHandler, PluginRegi
     private int dp2px(Context context, float dp) {
         final float scale = context.getResources().getDisplayMetrics().density;
         return (int) (dp * scale + 0.5f);
-    }
-
-    @Override
-    public boolean onActivityResult(int i, int i1, Intent intent) {
-        return flutterFullPdfViewerManager != null;
     }
 }
