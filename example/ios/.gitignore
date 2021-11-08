@@ -43,3 +43,8 @@ Icon?
 
 Pods/
 .symlinks/
+
+Flutter/flutter_export_environment.sh
+Flutter/Flutter.podspec
+Flutter/Debug.xcconfig
+Flutter/Release.xcconfig
