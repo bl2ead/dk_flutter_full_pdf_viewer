@@ -2,6 +2,8 @@
 
 Android and iOS working pdf viewer!
 
+Note: this is a fork of [flutter_full_pdf_viewer](https://github.com/albo1337/flutter_full_pdf_viewer) on `pub.dev`... as it does not seem to be maintained any longer based on stale PRs
+
 # Use this package as a library
 
 ## 1. Depend on it
